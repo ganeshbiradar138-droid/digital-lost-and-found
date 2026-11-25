@@ -1,0 +1,3037 @@
+//i add this comment for testing
+
+//i add this comment for testing
+document.addEventListener('DOMContentLoaded', function () {
+    // Use the deployed Render backend in production and localhost during local development
+    const API_BASE = (window.location.protocol === "file:" || window.location.origin === "null")
+        ? "http://127.0.0.1:5000"
+        : "https://lost-and-found-m4s7.onrender.com";
+
+    // Page Navigation
+    const loginPage = document.getElementById('login-page');
+    const registerPage = document.getElementById('register-page');
+    const dashboardContainer = document.getElementById('dashboard-container');
+    const emailVerificationPage = document.getElementById("email-verification-page");
+    const dashboardPage = document.getElementById('dashboard-page');
+    const reportLostPage = document.getElementById('report-lost-page');
+    const reportFoundPage = document.getElementById('report-found-page');
+    const searchItemsPage = document.getElementById('search-items-page');
+    const profilePage = document.getElementById('profile-page');
+    const manageUsersPage = document.getElementById("manage-users-page");
+    const reportManagementPage = document.getElementById("report-management-page");
+    const potentialMatchesPage = document.getElementById("potential-matches-page");
+
+    // Sidebar elements
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    const adminItems = document.querySelectorAll('.admin-item');
+    const userOnlySections = document.querySelectorAll(".user-only");
+
+    function updateAdminMenu() {
+
+        const role = localStorage.getItem("role");
+
+        adminItems.forEach(item => {
+
+            if (role === "admin") {
+                item.classList.remove("hidden");
+            } else {
+                item.classList.add("hidden");
+            }
+
+        });
+
+        userOnlySections.forEach(section => {
+
+            if (role === "admin") {
+                section.classList.add("hidden");
+            } else {
+                section.classList.remove("hidden");
+            }
+
+        });
+
+    }
+
+    updateAdminMenu();
+
+    // Auth elements
+    const showRegisterLink = document.getElementById('show-register');
+    const showLoginLink = document.getElementById('show-login');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    // Form elements
+    const lostItemImage = document.getElementById('lostItemImage');
+    const lostImagePreview = document.getElementById('lostImagePreview');
+    const foundItemImage = document.getElementById('foundItemImage');
+    const foundImagePreview = document.getElementById('foundImagePreview');
+    const cancelLostReport = document.getElementById('cancel-lost-report');
+    const cancelFoundReport = document.getElementById('cancel-found-report');
+
+    // Search elements
+    const searchButton = document.getElementById('searchButton');
+    const resetFilters = document.getElementById('resetFilters');
+    //otp verification
+    const verifyOtpBtn = document.getElementById("verify-otp-btn");
+    const resendOtpBtn = document.getElementById("resend-otp-btn");
+    const otpInput = document.getElementById("otp-input");
+    const otpTimer = document.getElementById("otp-timer");
+
+
+    // Show admin panel if user is admin
+
+
+    function loadUserProfile() {
+
+        const user = JSON.parse(localStorage.getItem("user"));
+        const role = localStorage.getItem("role");
+
+        if (!user) return;
+        if (role === "admin") {
+
+            // Show Admin Fields
+            document.getElementById("student-fields").classList.add("hidden");
+            document.getElementById("profile-firstname").required = false;
+            document.getElementById("profile-lastname").required = false;
+            document.getElementById("admin-fields").classList.remove("hidden");
+            document.getElementById("profile-role-badge").innerText = "Administrator";
+
+            // Top Bar
+            document.querySelector(".user-info .fw-bold").innerText =
+                user.fullname;
+
+            document.querySelector(".user-info .small").innerText =
+                user.email;
+
+            // Avatar
+            // Avatar
+            const initials = user.fullname
+                .split(" ")
+                .map(word => word[0].toUpperCase())
+                .join("");
+
+            document.querySelector(".user-avatar").innerText = initials;
+            document.getElementById("profile-avatar").innerText = initials;
+
+            // Profile Header
+            document.getElementById("profile-name").innerText =
+                user.fullname;
+
+            document.getElementById("profile-email").innerText =
+                user.email;
+
+            // Admin Form
+            document.getElementById("admin-fullname").value =
+                user.fullname;
+
+            document.getElementById("profile-email-input").value =
+                user.email;
+
+            return;
+        }
+        document.getElementById("student-fields").classList.remove("hidden");
+        document.getElementById("profile-firstname").required = true;
+        document.getElementById("profile-lastname").required = true;
+        document.getElementById("admin-fields").classList.add("hidden");
+        document.getElementById("profile-role-badge").innerText = "Student";
+
+        // Top Bar
+        document.querySelector(".user-info .fw-bold").innerText =
+            user.firstname + " " + user.lastname;
+
+        document.querySelector(".user-info .small").innerText =
+            user.email;
+
+        // Avatar (Top Bar)
+        document.querySelector(".user-avatar").innerText =
+            user.firstname.charAt(0).toUpperCase() +
+            user.lastname.charAt(0).toUpperCase();
+
+        // Profile Page
+        document.getElementById("profile-avatar").innerText =
+            user.firstname.charAt(0).toUpperCase() +
+            user.lastname.charAt(0).toUpperCase();
+
+        document.getElementById("profile-name").innerText =
+            user.firstname + " " + user.lastname;
+
+        document.getElementById("profile-email").innerText =
+            user.email;
+
+        // Form
+
+        document.getElementById("profile-firstname").value =
+            user.firstname;
+
+        document.getElementById("profile-lastname").value =
+            user.lastname;
+
+        document.getElementById("profile-email-input").value =
+            user.email;
+
+        document.getElementById("profile-phone").value =
+            user.phone;
+
+        document.getElementById("profile-studentid").value =
+            user.studentid;
+
+        document.getElementById("profile-department").value =
+            user.department;
+    }
+    // Page Navigation Functions
+
+
+
+    function showPage(pageElement) {
+
+
+
+
+        loginPage.classList.add("hidden");
+        registerPage.classList.add("hidden");
+        dashboardContainer.classList.add("hidden");
+        emailVerificationPage.classList.add("hidden");
+
+        pageElement.classList.remove("hidden");
+
+
+        sidebar.classList.remove("active");
+    }
+
+
+
+    function showDashboardPage(pageElement, clickedLink) {
+        // Hide all dashboard subpages
+        dashboardPage.classList.add('hidden');
+        reportLostPage.classList.add('hidden');
+        reportFoundPage.classList.add('hidden');
+        searchItemsPage.classList.add('hidden');
+        profilePage.classList.add('hidden');
+        manageUsersPage.classList.add('hidden');
+        reportManagementPage.classList.add('hidden');
+        potentialMatchesPage.classList.add('hidden');
+
+
+
+        // Show requested dashboard subpage
+        pageElement.classList.remove('hidden');
+
+        // Update sidebar active link
+        sidebarLinks.forEach(link => link.classList.remove('active'));
+        if (clickedLink) {
+            clickedLink.classList.add('active');
+        }
+        if (window.innerWidth <= 992) {
+            sidebar.classList.remove("active");
+            mobileMenuToggle.setAttribute("aria-expanded", "false");
+        }
+        loadTotalFoundItems();
+        loadTotalLostItems();
+        loadTotalReturnedItems();
+        loadTotalUnclaimedItems();
+    }
+
+    sidebarToggle.addEventListener("click", () => {
+        if (window.innerWidth <= 992) {
+            sidebar.classList.remove("active");
+            mobileMenuToggle.setAttribute("aria-expanded", "false");
+            return;
+        }
+
+        const isCollapsed = sidebar.classList.toggle("collapsed");
+        sidebarToggle.setAttribute("aria-expanded", String(!isCollapsed));
+        sidebarToggle.setAttribute("aria-label", isCollapsed ? "Expand sidebar" : "Collapse sidebar");
+        sidebarToggle.querySelector("i").classList.toggle("fa-chevron-left", !isCollapsed);
+        sidebarToggle.querySelector("i").classList.toggle("fa-chevron-right", isCollapsed);
+    });
+
+    mobileMenuToggle.addEventListener("click", () => {
+        const isOpening = !sidebar.classList.contains("active");
+        if (isOpening) {
+            sidebar.classList.remove("collapsed");
+        }
+        sidebar.classList.toggle("active", isOpening);
+        mobileMenuToggle.setAttribute("aria-expanded", String(isOpening));
+    });
+
+
+
+
+    // Event Listeners for Navigation
+    showRegisterLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        showPage(registerPage);
+    });
+
+    showLoginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        showPage(loginPage);
+    });
+
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        localStorage.removeItem("user"); // IMPORTANT
+        updateAdminMenu();
+
+        showPage(loginPage);
+    });
+
+
+    // resend otp
+    let otpCountdown;
+
+    function startOtpTimer(seconds = 300) {
+
+        clearInterval(otpCountdown);
+
+        let timeLeft = seconds;
+
+        otpCountdown = setInterval(() => {
+
+            const minutes = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+
+            otpTimer.innerText =
+                `OTP expires in ${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+
+            if (timeLeft <= 0) {
+
+                clearInterval(otpCountdown);
+
+                otpTimer.innerText = "OTP Expired";
+
+                verifyOtpBtn.disabled = true;
+
+            }
+
+            timeLeft--;
+
+        }, 1000);
+
+    }
+
+    // verification of otp
+    // Verify OTP
+   // Verify OTP
+verifyOtpBtn.addEventListener("click", async () => {
+    const pendingUser = JSON.parse(localStorage.getItem("pendingUser"));
+    if (!pendingUser) {
+        alert("Session expired. Please try again.");
+        showPage(loginPage);
+        return;
+    }
+
+    const response = await fetch("https://lost-and-found-m4s7.onrender.com/verify-otp", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            email: pendingUser.email,
+            otp: otpInput.value
+        })
+    });
+    const data = await response.json();
+    if (!response.ok) {
+        alert(data.message);
+        return;
+    }
+    
+    alert(data.message);
+    localStorage.removeItem("pendingUser");
+    
+    // Check if this account was created by an admin
+    if (pendingUser.createdByAdmin) {
+        // Return to the admin dashboard and refresh the user list
+        showPage(dashboardContainer);
+        showDashboardPage(manageUsersPage);
+        loadUsers();
+    } else {
+        // Normal student registration goes to login page
+        showPage(loginPage);
+    }
+});
+
+
+    // Resend OTP
+    resendOtpBtn.addEventListener("click", async () => {
+
+        const pendingUser = JSON.parse(localStorage.getItem("pendingUser"));
+
+        const response = await fetch("https://lost-and-found-m4s7.onrender.com/resend-otp", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                email: pendingUser.email
+            })
+
+        });
+
+        const data = await response.json();
+
+        alert(data.message);
+
+        if (!response.ok) return;
+
+        verifyOtpBtn.disabled = false;
+
+        startOtpTimer();
+
+        startResendTimer();
+
+    });
+
+
+    // Resend Timer
+    let resendCountdown;
+
+    function startResendTimer(seconds = 30) {
+
+        clearInterval(resendCountdown);
+
+        let timeLeft = seconds;
+
+        resendOtpBtn.disabled = true;
+
+        resendCountdown = setInterval(() => {
+
+            resendOtpBtn.innerText = `Resend OTP (${timeLeft}s)`;
+
+            if (timeLeft <= 0) {
+
+                clearInterval(resendCountdown);
+
+                resendOtpBtn.disabled = false;
+
+                resendOtpBtn.innerText = "Resend OTP";
+
+            }
+
+            timeLeft--;
+
+        }, 1000);
+
+    }
+
+
+
+    // Dashboard Navigation
+    document.querySelectorAll('[data-page]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const pageId = link.getAttribute('data-page');
+
+            switch (pageId) {
+                case 'dashboard':
+                    showDashboardPage(dashboardPage, link);
+                    break;
+                case 'report-lost':
+                    showDashboardPage(reportLostPage, link);
+                    break;
+                case 'report-found':
+                    showDashboardPage(reportFoundPage, link);
+                    break;
+                case 'search-items':
+                    showDashboardPage(searchItemsPage, link);
+                    loadSearchItems();
+
+                    const role = localStorage.getItem("role");
+
+                    const statusFilterGroup =
+                        document.getElementById("status-filter-group");
+
+                    if (statusFilterGroup) {
+                        if (role === "admin") {
+                            statusFilterGroup.style.display = "";
+                        } else {
+                            statusFilterGroup.style.display = "none";
+                        }
+                    }
+
+                    break;
+                case 'profile':
+                    showDashboardPage(profilePage, link);
+                    break;
+                case 'manage-users':
+                    console.log("Manage Users clicked");
+                    console.log(manageUsersPage);
+                    showDashboardPage(manageUsersPage, link);
+                    loadUsers();
+                    break;
+                case "report-management":
+
+                    showDashboardPage(reportManagementPage);
+
+                    loadReports();
+
+                    loadAdminTotalFoundItems();
+                    loadAdminTotalLostItems();
+
+                    break;
+
+                case "potential-matches":
+
+                    showDashboardPage(potentialMatchesPage, link);
+
+                    loadMatches();
+                    loadMatchHistory();
+
+                    break;
+            }
+        });
+    });
+
+
+
+
+    // Login and Register Form Submission
+    // ---------------- REGISTER ----------------
+    registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const firstname = document.getElementById("register-firstname").value;
+        const lastname = document.getElementById("register-lastname").value;
+        const email = document.getElementById("register-email").value;
+        const phone = document.getElementById("register-phone").value;
+        const studentid = document.getElementById("register-studentid").value;
+        const department = document.getElementById("register-department").value;
+        const password = document.getElementById("register-password").value;
+        const confirmPassword = document.getElementById("confirmPassword").value;
+
+        if (password !== confirmPassword) {
+            alert("Passwords do not match");
+            return;
+        }
+
+        const response = await fetch("https://lost-and-found-m4s7.onrender.com/send-otp", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                firstname,
+                lastname,
+                email,
+                phone,
+                studentid,
+                department,
+                password
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.message);
+            return;
+        }
+
+        alert(data.message);
+
+        localStorage.setItem("pendingUser", JSON.stringify({
+            firstname,
+            lastname,
+            email,
+            phone,
+            studentid,
+            department,
+            password
+        }));
+
+        showPage(emailVerificationPage);
+        verifyOtpBtn.disabled = false;
+        startOtpTimer();
+        resendOtpBtn.disabled = true;
+        startResendTimer();
+    });
+
+
+
+
+
+    // ---------------- LOGIN ----------------
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = document.querySelector("#login-email").value;
+        const password = document.querySelector("#login-password").value;
+
+        const res = await fetch(`${API_BASE}/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+        });
+
+        const data = await res.json();
+
+
+
+        if (res.status === 200) {
+
+
+            localStorage.setItem("user", JSON.stringify(data.user));
+            localStorage.setItem("role", data.role);
+
+            updateAdminMenu();
+
+            if (data.role === "admin") {
+
+                adminItems.forEach(item => {
+                    item.classList.remove("hidden");
+                });
+
+                showPage(dashboardContainer);
+                showDashboardPage(manageUsersPage);
+                loadUserProfile();
+
+                // Dashboard Data
+                loadTotalFoundItems();
+                loadTotalLostItems();
+                loadTotalReturnedItems();
+                loadRecentLostItems();
+                loadRecentActivities();
+
+                loadUsers();
+                loadReports();
+                loadAdminCount();
+
+            } else {
+
+                adminItems.forEach(item => {
+                    item.classList.add("hidden");
+                });
+
+                showPage(dashboardContainer);
+
+                showDashboardPage(dashboardPage);
+
+                loadUserProfile();
+                loadRecentActivities();
+
+                loadTotalFoundItems();
+                loadTotalLostItems();
+                loadTotalReturnedItems();
+                loadRecentLostItems();
+
+
+
+            }
+
+        } else {
+
+            alert(data.message);
+
+        }
+    });
+
+
+    // Image Preview for Lost Item Form
+    lostItemImage.addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                lostImagePreview.src = event.target.result;
+                lostImagePreview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Image Preview for Found Item Form
+    foundItemImage.addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                foundImagePreview.src = event.target.result;
+                foundImagePreview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Cancel Report Buttons
+    cancelLostReport.addEventListener('click', () => {
+        showDashboardPage(dashboardPage);
+        document.getElementById('lost-item-form').reset();
+        lostImagePreview.style.display = 'none';
+    });
+
+    cancelFoundReport.addEventListener('click', () => {
+        showDashboardPage(dashboardPage);
+        document.getElementById('found-item-form').reset();
+        foundImagePreview.style.display = 'none';
+    });
+
+    // Search Functionality
+    // Search Functionality
+
+    let searchItemsData = [];
+
+    async function loadSearchItems(searchTerm = "") {
+
+        const role = localStorage.getItem("role");
+
+        const category =
+            document.getElementById("categoryFilter").value;
+
+        const status =
+            document.getElementById("statusFilter").value;
+
+        const dateRange =
+            document.getElementById("dateFilter").value;
+
+        let url;
+
+        if (role === "admin") {
+            url = `https://lost-and-found-m4s7.onrender.com/admin/search-items?q=${encodeURIComponent(searchTerm)}`;
+        } else {
+            url = `https://lost-and-found-m4s7.onrender.com/search-lost-items?q=${encodeURIComponent(searchTerm)}`;
+        }
+
+        try {
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
+            }
+
+            const results = await response.json();
+
+            console.log("Search Items:", results);
+
+            searchItemsData = results;
+
+            // Apply filters on the returned data
+            let filteredResults = results.filter(item => {
+
+                // Category filter
+                if (
+                    category !== "All Categories" &&
+                    item.category !== category
+                ) {
+                    return false;
+                }
+
+                // Status / type filter
+                if (
+                    status !== "All Statuses" &&
+                    item.type !== status
+                ) {
+                    return false;
+                }
+
+                // Date filter
+                if (dateRange !== "All time") {
+
+                    const itemDate =
+                        item.date ||
+                        item.date_lost ||
+                        item.date_found;
+
+                    console.log(
+                        "DATE CHECK:",
+                        item.item_name,
+                        "API date:",
+                        itemDate,
+                        "Date object:",
+                        new Date(itemDate),
+                        "Selected range:",
+                        dateRange
+                    );
+
+                    if (!itemDate) {
+                        return false;
+                    }
+
+                    const itemDateObj =
+                        new Date(itemDate);
+
+                    const today = new Date();
+
+                    let pastDate = new Date(today);
+
+                    if (dateRange === "Last 7 days") {
+
+                        pastDate.setDate(
+                            today.getDate() - 7
+                        );
+
+                    } else if (dateRange === "Last 30 days") {
+
+                        pastDate.setDate(
+                            today.getDate() - 30
+                        );
+
+                    } else if (dateRange === "Last 3 months") {
+
+                        pastDate.setMonth(
+                            today.getMonth() - 3
+                        );
+                    }
+
+                    if (itemDateObj < pastDate) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            console.log(
+                "Filtered Search Items:",
+                filteredResults
+            );
+
+            displaySearchResults(filteredResults);
+
+        } catch (error) {
+
+            console.error(
+                "Search Items error:",
+                error
+            );
+
+            const resultsContainer =
+                document.getElementById("searchResults");
+
+            resultsContainer.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-danger">
+                    Unable to load items.
+                </div>
+            </div>
+        `;
+        }
+    }
+
+
+    function displaySearchResults(results) {
+
+        const resultsContainer =
+            document.getElementById("searchResults");
+
+        resultsContainer.innerHTML = "";
+
+        if (results.length === 0) {
+
+            resultsContainer.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-info">
+                    No items found.
+                </div>
+            </div>
+        `;
+
+            return;
+        }
+
+        results.forEach(item => {
+
+            const type = item.type || "Lost";
+
+            const typeClass =
+                type.toLowerCase() === "found"
+                    ? "category-found"
+                    : "category-lost";
+
+            const card = document.createElement("div");
+
+            card.className = "col-md-6 col-lg-4 mb-4";
+
+            card.innerHTML = `
+            <div class="item-card h-100">
+
+                <div class="item-details">
+
+                    <span class="item-category ${typeClass}">
+                        ${type.toUpperCase()}
+                    </span>
+
+                    <h3 class="item-title">
+                        ${item.item_name || "Unknown Item"}
+                    </h3>
+
+                    <p class="item-description">
+                        ${item.description || "No description available"}
+                    </p>
+
+                    <div class="item-meta">
+
+                        <span>
+                            <i class="fas fa-tag me-1"></i>
+                            ${item.category || "Other"}
+                        </span>
+
+                        <span>
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            ${item.location || "Unknown location"}
+                        </span>
+
+                        <span>
+                            <i class="fas fa-calendar me-1"></i>
+                            ${item.date || "Unknown date"}
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+
+            resultsContainer.appendChild(card);
+        });
+    }
+
+
+    // Search button
+    searchButton.addEventListener("click", () => {
+
+        const searchTerm =
+            document.getElementById("searchInput").value.trim();
+
+        loadSearchItems(searchTerm);
+    });
+
+    document.getElementById("categoryFilter").addEventListener("change", () => {
+
+        const searchTerm =
+            document.getElementById("searchInput").value.trim();
+
+        loadSearchItems(searchTerm);
+    });
+
+
+    document.getElementById("statusFilter").addEventListener("change", () => {
+
+        const searchTerm =
+            document.getElementById("searchInput").value.trim();
+
+        loadSearchItems(searchTerm);
+    });
+
+
+    document.getElementById("dateFilter").addEventListener("change", () => {
+
+        const searchTerm =
+            document.getElementById("searchInput").value.trim();
+
+        loadSearchItems(searchTerm);
+    });
+
+    // Press Enter to search
+    document.getElementById("searchInput").addEventListener("keydown", (event) => {
+
+        if (event.key === "Enter") {
+
+            const searchTerm =
+                document.getElementById("searchInput").value.trim();
+
+            loadSearchItems(searchTerm);
+        }
+    });
+
+
+    // Reset
+    resetFilters.addEventListener("click", () => {
+
+        document.getElementById("searchInput").value = "";
+
+        document.getElementById("categoryFilter").selectedIndex = 0;
+
+        document.getElementById("statusFilter").selectedIndex = 0;
+
+        document.getElementById("dateFilter").selectedIndex = 0;
+
+        loadSearchItems();
+    });
+
+
+
+
+
+    // Form Submissions (Mock)
+    const lostForm = document.getElementById("lost-item-form");
+
+    if (lostForm) {
+
+        lostForm.addEventListener("submit", async (e) => {
+
+            e.preventDefault();
+
+            const imageInput = document.getElementById("lostItemImage");
+
+            const user = JSON.parse(localStorage.getItem("user"));
+
+            const formData = new FormData();
+
+            formData.append("item_name", document.getElementById("lost-item-name").value);
+            formData.append("category", document.getElementById("lost-category").value);
+            formData.append("date_lost", document.getElementById("lost-date").value);
+            formData.append("location_lost", document.getElementById("lost-location").value);
+            formData.append("description", document.getElementById("lost-description").value);
+            formData.append("email", user.email);
+
+            if (imageInput.files.length > 0) {
+                formData.append("image", imageInput.files[0]);
+            }
+
+            const response = await fetch("https://lost-and-found-m4s7.onrender.com/lost-item", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            alert(data.message);
+
+            if (response.ok) {
+
+                lostForm.reset();
+
+                const preview = document.getElementById("lostImagePreview");
+
+                if (preview) {
+                    preview.style.display = "none";
+                }
+                loadTotalLostItems();
+                loadRecentLostItems();
+                loadRecentActivities();
+                showDashboardPage(dashboardPage);
+
+            }
+
+        });
+
+    }
+
+
+
+
+    const foundForm = document.getElementById("found-item-form");
+
+    if (foundForm) {
+
+        foundForm.addEventListener("submit", async (e) => {
+
+            e.preventDefault();
+
+            const user = JSON.parse(localStorage.getItem("user"));
+
+            const imageInput = document.getElementById("foundItemImage");
+
+            const formData = new FormData();
+
+            formData.append("item_name", document.getElementById("found-item-name").value);
+            formData.append("category", document.getElementById("found-category").value);
+            formData.append("date_found", document.getElementById("found-date").value);
+            formData.append("location_found", document.getElementById("found-location").value);
+            formData.append("description", document.getElementById("found-description").value);
+            formData.append("email", user.email);
+
+            if (imageInput.files.length > 0) {
+                formData.append("image", imageInput.files[0]);
+            }
+
+            const response = await fetch(
+                "https://lost-and-found-m4s7.onrender.com/found-item",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+            const data = await response.json();
+
+            alert(data.message);
+
+            if (response.ok) {
+
+                foundForm.reset();
+
+                foundImagePreview.style.display = "none";
+
+                loadTotalFoundItems();
+
+                loadRecentActivities();
+
+                showDashboardPage(dashboardPage);
+
+            }
+
+        });
+
+    }
+
+
+    const quickLostForm = document.getElementById("quick-lost-form");
+
+    if (quickLostForm) {
+
+        quickLostForm.addEventListener("submit", async (e) => {
+
+            e.preventDefault();
+            const user = JSON.parse(localStorage.getItem("user"));
+
+            const response = await fetch("https://lost-and-found-m4s7.onrender.com/quick-lost-item", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    item_name: document.getElementById("quick-lost-name").value,
+
+                    location_lost: document.getElementById("quick-lost-location").value,
+
+                    description: document.getElementById("quick-lost-description").value,
+
+                    email: user.email
+
+                })
+
+            });
+
+            const data = await response.json();
+
+            alert(data.message);
+
+            if (response.ok) {
+
+                quickLostForm.reset();
+
+                loadTotalLostItems();
+                loadRecentLostItems();
+                loadRecentActivities();
+                showDashboardPage(dashboardPage);
+
+            }
+
+        });
+
+    }
+
+
+
+    const quickFoundForm = document.getElementById("quick-found-form");
+
+    if (quickFoundForm) {
+
+        quickFoundForm.addEventListener("submit", async (e) => {
+
+            e.preventDefault();
+            const user = JSON.parse(localStorage.getItem("user"));
+
+            const response = await fetch("https://lost-and-found-m4s7.onrender.com/quick-found-item", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    item_name: document.getElementById("quick-found-name").value,
+
+                    location_found: document.getElementById("quick-found-location").value,
+
+                    description: document.getElementById("quick-found-description").value,
+
+                    email: user.email
+
+                })
+
+            });
+
+            const data = await response.json();
+
+            alert(data.message);
+
+            if (response.ok) {
+
+                quickFoundForm.reset();
+                loadTotalFoundItems();
+                loadRecentActivities();
+                showDashboardPage(dashboardPage);
+
+            }
+
+        });
+
+    }
+    async function loadDefaultLostItems() {
+        try {
+            const response = await fetch(
+                "https://lost-and-found-m4s7.onrender.com/search-lost-items"
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to load lost items");
+            }
+
+            const results = await response.json();
+
+            console.log("Default lost items:", results);
+
+            displaySearchResults(results);
+
+        } catch (error) {
+            console.error("Error loading default lost items:", error);
+        }
+    }
+
+
+
+
+    async function loadTotalFoundItems() {
+
+        const response = await fetch("https://lost-and-found-m4s7.onrender.com/total-found-items");
+
+        const data = await response.json();
+
+        document.getElementById("total-found-items").innerText = data.total;
+
+    }
+
+
+
+    async function loadTotalLostItems() {
+
+        const response = await fetch("https://lost-and-found-m4s7.onrender.com/total-lost-items");
+
+        const data = await response.json();
+
+        document.getElementById("total-lost-items").innerText = data.total;
+
+    }
+
+    async function loadTotalReturnedItems() {
+
+        const response = await fetch(
+            "https://lost-and-found-m4s7.onrender.com/total-returned-items"
+        );
+
+        const data = await response.json();
+
+        const adminReturnedItems = document.getElementById("returned-items");
+        const userReturnedItems = document.getElementById("user-returned-items");
+
+        if (adminReturnedItems) {
+            adminReturnedItems.innerText = data.total;
+        }
+
+        if (userReturnedItems) {
+            userReturnedItems.innerText = data.total;
+        }
+
+    }
+
+    async function loadTotalUnclaimedItems() {
+        const response = await fetch(
+            "https://lost-and-found-m4s7.onrender.com/total-unclaimed-items"
+        );
+        const data = await response.json();
+
+        const adminUnclaimedItems = document.getElementById("admin-unclaimed-items");
+        const userUnclaimedItems = document.getElementById("user-unclaimed-items");
+
+        if (adminUnclaimedItems) {
+            adminUnclaimedItems.innerText = data.total;
+        }
+
+        if (userUnclaimedItems) {
+            userUnclaimedItems.innerText = data.total;
+        }
+    }
+
+    async function loadAdminTotalFoundItems() {
+
+        const response = await fetch("https://lost-and-found-m4s7.onrender.com/total-found-items");
+        const data = await response.json();
+
+        document.getElementById("admin-total-found-items").innerText =
+            data.total;
+
+    }
+
+    async function loadAdminTotalLostItems() {
+
+        const response = await fetch("https://lost-and-found-m4s7.onrender.com/total-lost-items");
+        const data = await response.json();
+
+        document.getElementById("admin-total-lost-items").innerText =
+            data.total;
+
+    }
+
+
+
+
+    function getTimeAgo(time) {
+
+        const now = new Date();
+        const activityTime = new Date(time);
+
+
+
+        const diff = now - activityTime;
+
+        ;
+
+        const seconds = Math.floor(diff / 1000);
+        ;
+
+        const minutes = Math.floor(seconds / 60);
+
+
+        if (seconds < 60) return "Just now";
+
+        if (minutes < 60)
+            return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+
+        const hours = Math.floor(minutes / 60);
+
+
+        if (hours < 24)
+            return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+
+        const days = Math.floor(hours / 24);
+
+        if (days === 1) return "Yesterday";
+
+        if (days < 7)
+            return `${days} days ago`;
+
+        return activityTime.toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric"
+        });
+    }
+
+
+
+
+    async function loadRecentActivities() {
+
+        const user = JSON.parse(localStorage.getItem("user"));
+
+        if (!user) return;
+
+        const response = await fetch(
+            `https://lost-and-found-m4s7.onrender.com/recent-activities?email=${user.email}`
+        );
+
+        const activities = await response.json();
+
+        const list = document.getElementById("recent-activity-list");
+
+        list.innerHTML = "";
+
+        activities.forEach(activity => {
+
+
+            list.innerHTML += `
+
+        <li class="list-group-item d-flex justify-content-between align-items-start">
+
+            <div class="ms-2 me-auto">
+
+                <div class="fw-bold">${activity.activity}</div>
+
+            </div>
+
+            
+            <span class="badge bg-primary rounded-pill">
+
+                ${getTimeAgo(activity.time)}
+
+            </span>
+
+        </li>
+
+        `;
+
+        });
+
+    }
+    console.log("JS reached loadUsers definition");
+    async function loadUsers() {
+
+        console.log("loadUsers() called");
+
+        const response = await fetch("https://lost-and-found-m4s7.onrender.com/admin/users");
+
+        const users = await response.json();
+
+        window.allUsers = users;
+
+        const totalUsers = users.length;
+
+        const totalStudents = users.filter(user => user.role !== "admin").length;
+
+        const totalAdmins = users.filter(user => user.role === "admin").length;
+
+        const totalBlocked = users.filter(user => user.status === "blocked").length;
+
+        document.getElementById("total-users").innerText = totalUsers;
+        loadAdminCount();
+
+        document.getElementById("total-students").innerText = totalStudents;
+
+        document.getElementById("total-admins").innerText = totalAdmins;
+
+        document.getElementById("total-blocked").innerText = totalBlocked;
+
+        renderUsers(users);
+    }
+    async function loadAdminCount() {
+        try {
+            const response = await fetch("https://lost-and-found-m4s7.onrender.com/admin/admin-count");
+
+            const data = await response.json();
+
+            document.getElementById("total-admins").innerText = data.count;
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+    let reportSearch = "";
+    let reportType = "all";
+    let reportStatus = "all";
+    async function loadReports() {
+        const response = await fetch("https://lost-and-found-m4s7.onrender.com/admin/reports");
+
+        const reports = await response.json();
+        const filteredReports = reports.filter(report => {
+
+            const searchText = reportSearch;
+            const reportName = String(report.item_name || "").toLowerCase();
+            const reporterName = String(report.fullname || "").toLowerCase();
+            const studentId = String(report.studentid || "").toLowerCase();
+
+            const matchesSearch =
+                reportName.includes(searchText) ||
+                reporterName.includes(searchText) ||
+                studentId.includes(searchText);
+
+            const matchesType =
+                reportType === "all" ||
+                report.type.toLowerCase() === reportType.toLowerCase();
+
+            const matchesStatus =
+                reportStatus === "all" ||
+                report.status.toLowerCase() === reportStatus.toLowerCase();
+
+            return matchesSearch && matchesType && matchesStatus;
+        });
+        const tbody = document.getElementById("reports-table-body");
+
+        tbody.innerHTML = "";
+        filteredReports.forEach(report => {
+
+            const badge =
+                report.type === "Lost"
+                    ? '<span class="badge bg-danger">Lost</span>'
+                    : '<span class="badge bg-success">Found</span>';
+
+            const row = `
+
+        <tr>
+
+        <td>${report.fullname || "Unknown User"}</td>
+
+        <td>${badge}</td>
+
+        <td>${report.item_name}</td>
+
+        <td>${report.category || "-"}</td>
+
+        <td>
+
+       <span class="status-badge
+        ${report.status === "Approved"
+                    ? "status-active"
+                    : report.status === "Pending"
+                        ? "status-pending"
+                        : report.status === "Rejected"
+                            ? "status-rejected"
+                            : "status-returned"
+                }">
+
+        ${report.status}
+
+        </span>
+
+        </td>
+
+        <td>${report.date_lost || report.date_found || "-"}</td>
+
+        <td>
+
+        <button class="btn btn-sm btn-outline-primary view-report-btn">
+        <i class="fas fa-eye"></i>
+        </button>
+
+        ${report.status === "Pending"
+                    ? `
+            <button class="btn btn-sm btn-outline-success approve-btn">
+                <i class="fas fa-check"></i>
+            </button>
+
+            <button class="btn btn-sm btn-outline-danger reject-btn">
+                <i class="fas fa-times"></i>
+            </button>
+            `
+                    : report.status === "Approved"
+                        ? `
+            <button class="btn btn-sm btn-outline-info return-btn">
+                <i class="fas fa-box-open"></i>
+            </button>
+
+            <button class="btn btn-sm btn-outline-danger reject-btn">
+                <i class="fas fa-times"></i>
+            </button>
+            `
+                        : report.status === "Returned"
+                            ? `
+            <button class="btn btn-sm btn-outline-warning unreturn-btn">
+                <i class="fas fa-undo"></i>
+            </button>
+            `
+                            : report.status === "Rejected"
+                                ? `
+            <button class="btn btn-sm btn-outline-secondary unreject-btn">
+                <i class="fas fa-rotate-left"></i>
+            </button>
+            `
+                                : ""
+                }
+
+            </td>
+
+            </tr>
+
+            `;
+
+            tbody.insertAdjacentHTML("beforeend", row);
+            const lastRow = tbody.lastElementChild;
+
+            lastRow.querySelector(".view-report-btn")
+                .addEventListener("click", () => {
+                    console.log(report);
+                    viewReport(report);
+                });
+            const approveBtn = lastRow.querySelector(".approve-btn");
+
+            if (approveBtn) {
+
+                approveBtn.addEventListener("click", async () => {
+
+                    const response = await fetch(
+                        "https://lost-and-found-m4s7.onrender.com/admin/approve-report",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                id: report._id,
+                                type: report.type
+                            })
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    alert(data.message);
+
+                    loadReports();
+                    loadTotalUnclaimedItems();
+
+                });
+
+            }
+            const rejectBtn = lastRow.querySelector(".reject-btn");
+
+            if (rejectBtn) {
+
+                rejectBtn.addEventListener("click", async () => {
+
+                    const response = await fetch(
+                        "https://lost-and-found-m4s7.onrender.com/admin/reject-report",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                id: report._id,
+                                type: report.type
+                            })
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    alert(data.message);
+
+                    loadReports();
+
+                });
+
+
+            }
+
+
+
+            const returnBtn = lastRow.querySelector(".return-btn");
+
+            if (returnBtn) {
+
+                returnBtn.addEventListener("click", async () => {
+
+                    const response = await fetch(
+                        "https://lost-and-found-m4s7.onrender.com/admin/return-report",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                id: report._id,
+                                type: report.type
+                            })
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    alert(data.message);
+
+                    loadReports();
+                    loadTotalReturnedItems();
+                    loadTotalUnclaimedItems();
+
+                });
+
+            }
+
+
+            const unreturnBtn = lastRow.querySelector(".unreturn-btn");
+
+            if (unreturnBtn) {
+
+                unreturnBtn.addEventListener("click", async () => {
+
+                    const response = await fetch(
+                        "https://lost-and-found-m4s7.onrender.com/admin/not-returned",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                id: report._id,
+                                type: report.type
+                            })
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    alert(data.message);
+
+                    loadReports();
+                    loadTotalReturnedItems();
+                    loadTotalUnclaimedItems();
+
+                });
+
+            }
+            const unrejectBtn = lastRow.querySelector(".unreject-btn");
+
+            if (unrejectBtn) {
+
+                unrejectBtn.addEventListener("click", async () => {
+
+                    const response = await fetch(
+                        "https://lost-and-found-m4s7.onrender.com/admin/unreject-report",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                id: report._id,
+                                type: report.type
+                            })
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    alert(data.message);
+
+                    loadReports();
+
+                });
+
+            }
+
+        });
+
+    }
+    document.getElementById("report-search").addEventListener("input", function () {
+        reportSearch = this.value.toLowerCase().trim();
+        loadReports();
+    });
+
+    document.getElementById("report-type-filter").addEventListener("change", function () {
+        reportType = this.value;
+        loadReports();
+    });
+
+    document.getElementById("report-status-filter").addEventListener("change", function () {
+        reportStatus = this.value;
+        loadReports();
+    });
+    console.log("Reached viewReport");
+    window.viewReport = function (report) {
+        document.getElementById("report-item-name").innerText = report.item_name;
+
+        document.getElementById("report-category").innerText = report.category;
+
+        document.getElementById("report-type").innerText = report.type;
+
+        document.getElementById("report-status").innerText = report.status;
+
+        document.getElementById("report-user").innerText =
+            report.fullname || "Unknown User";
+
+        document.getElementById("report-studentid").innerText =
+            report.studentid || "-";
+
+        document.getElementById("report-department").innerText =
+            report.department || "-";
+
+        document.getElementById("report-phone").innerText =
+            report.phone || "-";
+
+        document.getElementById("report-location").innerText =
+            report.location_lost || report.location_found;
+
+        document.getElementById("report-date").innerText =
+            report.date_lost || report.date_found;
+
+        document.getElementById("report-description").innerText =
+            report.description;
+
+        const img = document.getElementById("report-image");
+
+        if (report.image) {
+
+            img.src = "https://lost-and-found-m4s7.onrender.com/uploads/" + report.image;
+
+            img.style.display = "block";
+
+        } else {
+
+            img.style.display = "none";
+
+        }
+
+        const modal = new bootstrap.Modal(
+            document.getElementById("viewReportModal")
+        );
+
+        modal.show();
+
+    }
+
+
+
+
+    async function loadRecentLostItems() {
+
+        const response = await fetch("https://lost-and-found-m4s7.onrender.com/recent-lost-items");
+
+        const items = await response.json();
+
+        const container = document.getElementById("recent-lost-items-container");
+
+        container.innerHTML = "";
+
+        items.forEach(item => {
+
+            container.innerHTML += `
+        <div class="col-md-6 col-lg-4">
+
+            <div class="item-card">
+
+                <div class="item-details">
+
+                    <span class="item-category category-lost">LOST</span>
+
+                    <h3 class="item-title">${item.item_name}</h3>
+
+                    <p class="item-description">${item.description}</p>
+
+                    <div class="item-meta">
+
+                        <span>
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            ${item.location_lost}
+                        </span>
+
+                        <span>
+                            <i class="fas fa-calendar me-1"></i>
+                            ${item.date_lost}
+                        </span>
+
+                    </div>
+
+                    <div class="item-actions">
+
+    <button class="btn btn-sm btn-outline-danger"
+    onclick="openFoundReport(
+        '${item.item_name}',
+        '${item.category}',
+        '${item.location_lost}'
+    )">
+
+    Mark as Found
+
+    </button>
+
+</div>
+
+                </div>
+
+            </div>
+
+        </div>
+        `;
+
+        });
+
+    }
+
+
+
+    function openFoundReport(itemName, category, location) {
+
+        // Open the Report Found Item page
+        showDashboardPage(reportFoundPage);   // If your project uses another function, tell me.
+
+        // Fill the form
+        document.getElementById("found-item-name").value = itemName;
+
+        document.getElementById("found-category").value = category;
+
+        document.getElementById("found-location").value = location;
+
+        // Set today's date
+        document.getElementById("found-date").value =
+            new Date().toISOString().split("T")[0];
+    }
+    window.openFoundReport = openFoundReport;
+
+
+
+
+
+    // Profile Form Submissions (Mock)
+    // ---------------- UPDATE PROFILE ----------------
+
+    const profileForm = document.getElementById("profile-form");
+
+    if (profileForm) {
+
+        profileForm.addEventListener("submit", async (e) => {
+
+            e.preventDefault();
+
+            const user = JSON.parse(localStorage.getItem("user"));
+
+            const role = localStorage.getItem("role");
+
+            let bodyData;
+
+            if (role === "admin") {
+
+                bodyData = {
+
+                    fullname: document.getElementById("admin-fullname").value,
+
+                    email: user.email,
+
+                    role: "admin"
+
+                };
+
+            } else {
+
+                bodyData = {
+
+                    firstname: document.getElementById("profile-firstname").value,
+
+                    lastname: document.getElementById("profile-lastname").value,
+
+                    email: user.email,
+
+                    phone: document.getElementById("profile-phone").value,
+
+                    role: "user"
+
+                };
+
+            }
+
+            const response = await fetch("https://lost-and-found-m4s7.onrender.com/update-profile", {
+
+                method: "PUT",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(bodyData)
+
+            });
+
+            const data = await response.json();
+
+
+            alert(data.message);
+
+            if (response.ok) {
+
+                localStorage.setItem("user", JSON.stringify(data.user));
+
+
+                loadUserProfile();
+                loadRecentActivities();
+
+            }
+
+        });
+
+    }
+
+
+    const passwordForm = document.getElementById("password-form");
+
+    if (passwordForm) {
+
+        passwordForm.addEventListener("submit", async (e) => {
+
+            e.preventDefault();
+
+            const user = JSON.parse(localStorage.getItem("user"));
+
+            const currentPassword = document.getElementById("current-password").value;
+
+            const newPassword = document.getElementById("new-password").value;
+
+            const confirmPassword = document.getElementById("confirm-password").value;
+
+            if (newPassword !== confirmPassword) {
+                alert("New passwords do not match");
+                return;
+            }
+
+            const response = await fetch("https://lost-and-found-m4s7.onrender.com/change-password", {
+
+                method: "PUT",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    email: user.email,
+
+                    current_password: currentPassword,
+
+                    new_password: newPassword
+
+                })
+
+            });
+
+            const data = await response.json();
+
+            alert(data.message);
+
+            if (response.ok) {
+
+                passwordForm.reset();
+
+            }
+
+        });
+
+    }
+
+
+
+    // Initialize with login page visible
+    const user = localStorage.getItem("user");
+
+    if (user) {
+
+        showPage(dashboardContainer);
+
+        const role = localStorage.getItem("role");
+
+        if (role === "admin") {
+            showDashboardPage(manageUsersPage);
+        } else {
+            showDashboardPage(dashboardPage);
+        }
+
+        loadUserProfile();
+
+        loadTotalFoundItems();
+        loadTotalLostItems();
+        loadRecentLostItems();
+        loadRecentActivities();
+    } else {
+
+        showPage(loginPage);
+
+    }
+
+
+
+
+    function renderUsers(users) {
+
+        const tbody = document.getElementById("users-table-body");
+
+        tbody.innerHTML = "";
+
+        users.forEach(user => {
+
+            tbody.innerHTML += `
+        <tr>
+            <td class="text-center">${user.studentid || "-"}</td>
+            <td>${user.fullname}</td>
+            <td>${user.email}</td>
+            <td>${user.role === "admin" ? "Administrator" : "Student"}</td>
+            <td>
+
+    ${user.status === "blocked"
+
+                    ?
+
+                    `<span class="status-badge status-pending">
+            Blocked
+        </span>`
+
+                    :
+
+                    `<span class="status-badge status-active">
+            Active
+        </span>`
+                }
+
+</td>
+
+            <td>
+                
+    <button
+    class="btn btn-sm btn-outline-primary view-user-btn"
+    data-id="${user._id}">
+
+    <i class="fas fa-eye"></i>
+
+</button>
+
+                <button
+    class="btn btn-sm btn-outline-warning edit-user-btn"
+    data-id="${user._id}">
+    <i class="fas fa-edit"></i>
+</button>
+${user.status === "blocked"
+
+                    ?
+
+                    `<button
+        class="btn btn-sm btn-outline-success unblock-user-btn"
+        data-id="${user._id}">
+
+        <i class="fas fa-check"></i>
+
+    </button>`
+
+                    :
+
+                    `<button
+        class="btn btn-sm btn-outline-danger block-user-btn"
+        data-id="${user._id}">
+
+        <i class="fas fa-ban"></i>
+
+    </button>`
+                }
+            </td>
+
+        </tr>
+        `;
+
+        });
+        document.querySelectorAll(".view-user-btn").forEach(btn => {
+
+            btn.addEventListener("click", () => {
+
+                viewUser(btn.dataset.id);
+
+            });
+
+        });
+
+        document.querySelectorAll(".edit-user-btn").forEach(btn => {
+
+            btn.addEventListener("click", () => {
+
+                openEditUser(btn.dataset.id);
+
+            });
+
+        });
+        document.querySelectorAll(".block-user-btn").forEach(btn => {
+
+            btn.addEventListener("click", () => {
+
+                openBlockModal(btn.dataset.id);
+
+            });
+
+        });
+        document.querySelectorAll(".unblock-user-btn").forEach(btn => {
+
+            btn.addEventListener("click", () => {
+
+                unblockUser(btn.dataset.id);
+
+            });
+
+        });
+
+    }
+
+    const searchInput = document.getElementById("user-search");
+
+    document.getElementById("user-search")
+        .addEventListener("input", filterUsers);
+    document.getElementById("role-filter")
+        .addEventListener("change", filterUsers);
+
+    document.getElementById("status-filter")
+        .addEventListener("change", filterUsers);
+
+
+
+    function filterUsers() {
+
+        const searchValue =
+            document.getElementById("user-search").value.toLowerCase();
+
+        const roleValue =
+            document.getElementById("role-filter").value;
+
+        const statusValue =
+            document.getElementById("status-filter").value;
+
+        const filtered = window.allUsers.filter(user => {
+
+            const name =
+                (user.fullname || "").toLowerCase();
+
+            const email =
+                (user.email || "").toLowerCase();
+
+            const studentid =
+                (user.studentid || "").toLowerCase();
+
+            const role =
+                user.role || "user";
+
+            const status =
+                user.status || "active";
+
+            const matchesSearch =
+                name.includes(searchValue) ||
+                email.includes(searchValue) ||
+                studentid.includes(searchValue);
+
+            const matchesRole =
+                roleValue === "all" || role === roleValue;
+
+            const matchesStatus =
+                statusValue === "all" || status === statusValue;
+
+            return matchesSearch && matchesRole && matchesStatus;
+
+        });
+
+        renderUsers(filtered);
+
+    }
+
+    function viewUser(id) {
+
+        const user = window.allUsers.find(u => u._id === id);
+
+        if (!user) return;
+
+        document.getElementById("view-fullname").innerText =
+            user.fullname || "-";
+
+        document.getElementById("view-email").innerText =
+            user.email || "-";
+
+        document.getElementById("view-phone").innerText =
+            user.phone || "-";
+
+        document.getElementById("view-studentid").innerText =
+            user.studentid || "—";
+
+        document.getElementById("view-department").innerText =
+            user.department || "—";
+
+        document.getElementById("view-role").innerText =
+            user.role === "admin"
+                ? "Administrator"
+                : "Student";
+
+        const modal = new bootstrap.Modal(
+            document.getElementById("userDetailsModal")
+        );
+
+        modal.show();
+
+    }
+    function openEditUser(id) {
+
+        const user = window.allUsers.find(u => u._id === id);
+
+        if (!user) return;
+
+        document.getElementById("edit-user-id").value =
+            user._id;
+
+        document.getElementById("edit-fullname").value =
+            user.fullname || "";
+
+        document.getElementById("edit-email").value =
+            user.email || "";
+
+        document.getElementById("edit-studentid").value =
+            user.studentid || "";
+
+        document.getElementById("edit-phone").value =
+            user.phone || "";
+
+        document.getElementById("edit-department").value =
+            user.department || "";
+
+        document.getElementById("edit-role").value =
+            user.role || "user";
+
+
+        const modal = new bootstrap.Modal(
+            document.getElementById("editUserModal")
+        );
+
+        modal.show();
+
+    }
+    document.getElementById("save-edit-user-btn").addEventListener("click", async () => {
+
+        const userId =
+            document.getElementById("edit-user-id").value;
+
+        const fullname =
+            document.getElementById("edit-fullname").value.trim();
+
+        const studentid =
+            document.getElementById("edit-studentid").value.trim();
+
+        const phone =
+            document.getElementById("edit-phone").value.trim();
+
+        const department =
+            document.getElementById("edit-department").value.trim();
+
+        const role =
+            document.getElementById("edit-role").value;
+
+        try {
+
+            const response = await fetch(
+                "https://lost-and-found-m4s7.onrender.com/admin/update-user",
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        user_id: userId,
+                        fullname: fullname,
+                        studentid: studentid,
+                        phone: phone,
+                        department: department,
+                        role: role
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            alert(data.message);
+
+            if (!response.ok) {
+                return;
+            }
+
+            const modalElement =
+                document.getElementById("editUserModal");
+
+            const modal =
+                bootstrap.Modal.getInstance(modalElement);
+
+            modal.hide();
+
+            loadUsers();
+
+        } catch (error) {
+
+            console.error("Update user error:", error);
+
+            alert("Something went wrong while updating the user.");
+
+        }
+
+    });
+    function openBlockModal(id) {
+
+        document.getElementById("block-user-id").value = id;
+
+        document.getElementById("block-reason").value = "";
+
+        document.getElementById("block-note").value = "";
+
+        document.getElementById("send-email").checked = true;
+
+        const modal = new bootstrap.Modal(
+            document.getElementById("blockUserModal")
+        );
+
+        modal.show();
+
+    }
+
+
+    document.getElementById("confirm-block-btn")
+        .addEventListener("click", async () => {
+
+            const userId = document.getElementById("block-user-id").value;
+
+            const reason = document.getElementById("block-reason").value;
+
+            const note = document.getElementById("block-note").value;
+
+            if (reason === "") {
+
+                alert("Please select a reason.");
+
+                return;
+
+            }
+
+            const response = await fetch(
+                "https://lost-and-found-m4s7.onrender.com/admin/block-user",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        user_id: userId,
+                        reason: reason,
+                        note: note
+                    })
+                }
+            );
+
+            const result = await response.json();
+
+            alert(result.message);
+
+            bootstrap.Modal.getInstance(
+                document.getElementById("blockUserModal")
+            ).hide();
+
+            loadUsers();
+
+        });
+
+
+    async function unblockUser(id) {
+
+        if (!confirm("Are you sure you want to unblock this user?")) {
+            return;
+        }
+
+        const response = await fetch(
+            "https://lost-and-found-m4s7.onrender.com/admin/unblock-user",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    user_id: id
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        alert(result.message);
+
+        loadUsers();
+
+    }
+    // ================= ADD USER MODAL =================
+
+// Get Add User modal elements
+const addUserButton = document.getElementById("add-user-btn");
+const addUserModalElement = document.getElementById("addUserModal");
+const addUserForm = document.getElementById("add-user-form");
+const newUserRole = document.getElementById("new-user-role");
+
+// Student fields
+const studentNameFields = document.getElementById("student-name-fields");
+const studentIdField = document.getElementById("student-id-field");
+const studentDepartmentField = document.getElementById("student-department-field");
+
+// Administrator field
+const adminNameField = document.getElementById("admin-name-field");
+
+// Password fields
+const newUserPassword = document.getElementById("new-user-password");
+const confirmUserPassword = document.getElementById("new-user-confirm-password");
+
+// Message area
+const addUserMessage = document.getElementById("add-user-message");
+
+
+// Open the modal when Add User is clicked
+if (addUserButton && addUserModalElement) {
+
+    addUserButton.addEventListener("click", function () {
+
+        addUserForm.reset();
+
+        addUserMessage.textContent = "";
+        addUserMessage.classList.add("hidden");
+
+        // Show student fields by default
+        studentNameFields.classList.remove("hidden");
+        studentIdField.parentElement.classList.remove("hidden");
+        studentDepartmentField.parentElement.classList.remove("hidden");
+
+        adminNameField.classList.add("hidden");
+
+        // Clear previous role selection
+        newUserRole.value = "";
+
+        const modal = bootstrap.Modal.getOrCreateInstance(
+            addUserModalElement
+        );
+
+        modal.show();
+
+    });
+
+}
+
+
+
+
+// Show fields according to selected role
+function updateAddUserFields() {
+
+    const selectedRole = newUserRole.value;
+
+    // Show Student fields only for Student
+    if (selectedRole === "student") {
+
+        studentNameFields.classList.remove("hidden");
+        studentIdField.classList.remove("hidden");
+        studentDepartmentField.classList.remove("hidden");
+
+    } else {
+
+        studentNameFields.classList.add("hidden");
+        studentIdField.classList.add("hidden");
+        studentDepartmentField.classList.add("hidden");
+
+    }
+
+    // Show Administrator Full Name only for Administrator
+    if (selectedRole === "admin") {
+
+        adminNameField.classList.remove("hidden");
+
+    } else {
+
+        adminNameField.classList.add("hidden");
+
+    }
+
+}
+
+// Listen for role changes
+if (newUserRole) {
+    newUserRole.addEventListener("change", updateAddUserFields);
+}
+
+
+// Handle Add User Form Submission (Send OTP)
+// Handle Add User Form Submission (Send OTP)
+if (addUserForm) {
+    addUserForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        
+        const password = newUserPassword.value;
+        const confirmPassword = confirmUserPassword.value;
+        const role = newUserRole.value;
+        
+        addUserMessage.classList.remove("hidden");
+        
+        if (!role) {
+            addUserMessage.className = "alert alert-danger";
+            addUserMessage.textContent = "Please select a user type.";
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            addUserMessage.className = "alert alert-danger";
+            addUserMessage.textContent = "Passwords do not match.";
+            return;
+        }
+
+        if (password.length < 8) {
+            addUserMessage.className = "alert alert-danger";
+            addUserMessage.textContent = "Password must contain at least 8 characters.";
+            return;
+        }
+
+        // Collect data based on role
+        let payload = {
+            role: role,
+            email: document.getElementById("new-user-email").value.trim(),
+            phone: document.getElementById("new-user-phone").value.trim(),
+            password: password,
+            createdByAdmin: true // Flag to redirect back to dashboard later
+        };
+
+        if (role === "student") {
+            payload.firstname = document.getElementById("new-user-firstname").value.trim();
+            payload.lastname = document.getElementById("new-user-lastname").value.trim();
+            payload.studentid = document.getElementById("new-user-studentid").value.trim();
+            payload.department = document.getElementById("new-user-department").value.trim();
+            
+            if (!payload.firstname || !payload.lastname) {
+                addUserMessage.className = "alert alert-danger";
+                addUserMessage.textContent = "First Name and Last Name are required for students.";
+                return;
+            }
+        } else if (role === "admin") {
+            payload.fullname = document.getElementById("new-user-fullname").value.trim();
+            if (!payload.fullname) {
+                addUserMessage.className = "alert alert-danger";
+                addUserMessage.textContent = "Full Name is required for administrators.";
+                return;
+            }
+        }
+
+        // Disable button to prevent double submission
+        const submitBtn = addUserForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerText;
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Sending OTP...";
+
+        try {
+            const response = await fetch("https://lost-and-found-m4s7.onrender.com/send-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                addUserMessage.className = "alert alert-danger";
+                addUserMessage.textContent = data.message || "Failed to send OTP.";
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
+                return;
+            }
+
+            // Success: OTP sent
+            // Save to pendingUser (same key used by normal registration)
+            localStorage.setItem("pendingUser", JSON.stringify(payload));
+            
+            // Hide the Add User modal
+            const modalInstance = bootstrap.Modal.getInstance(addUserModalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+
+            // Show the existing Email Verification Page
+            showPage(emailVerificationPage);
+            verifyOtpBtn.disabled = false;
+            startOtpTimer();
+            resendOtpBtn.disabled = true;
+            startResendTimer();
+            
+        } catch (error) {
+            console.error("Add User OTP Error:", error);
+            addUserMessage.className = "alert alert-danger";
+            addUserMessage.textContent = "Network error. Please try again.";
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalBtnText;
+        }
+    });
+}
+
+});
+//start form here
+async function loadMatches() {
+    try {
+        const response = await fetch("https://lost-and-found-m4s7.onrender.com/admin/matches");
+
+        const matches = await response.json();
+
+        const tbody = document.getElementById("matches-table-body");
+
+        tbody.innerHTML = "";
+
+        if (matches.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center">
+                        No potential matches found.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        matches.forEach(match => {
+
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${match.lost_item}</td>
+
+                <td>${match.found_item}</td>
+
+                <td>${match.score}%</td>
+
+                <td>${match.level}</td>
+
+                <td>
+                    <button
+                        class="btn btn-sm btn-primary check-match-btn"
+                        data-lost-id="${match.lost_id}"
+                        data-found-id="${match.found_id}">
+                        Check Information
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error("Error loading matches:", error);
+    }
+}
+document.addEventListener("click", async function (e) {
+
+    if (e.target.classList.contains("check-match-btn")) {
+
+        const lostId = e.target.dataset.lostId;
+        const foundId = e.target.dataset.foundId;
+
+        document.getElementById("confirmMatchBtn").dataset.lostId = lostId;
+        document.getElementById("confirmMatchBtn").dataset.foundId = foundId;
+
+        try {
+
+            const response = await fetch(
+                `https://lost-and-found-m4s7.onrender.com/admin/match/${lostId}/${foundId}`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                console.error("Server error:", data);
+                alert(data.message || "Unable to load match information.");
+                return;
+            }
+
+            const lost = data.lost_item;
+            const found = data.found_item;
+
+            const lostReporter = data.lost_reporter;
+            const foundReporter = data.found_reporter;
+
+
+            // Lost Item
+            document.getElementById("match-lost-item").textContent =
+                lost.item_name || "";
+
+            document.getElementById("match-lost-category").textContent =
+                lost.category || "";
+
+            document.getElementById("match-lost-date").textContent =
+                lost.date_lost || "";
+
+            document.getElementById("match-lost-location").textContent =
+                lost.location_lost || "";
+
+            document.getElementById("match-lost-description").textContent =
+                lost.description || "No description available.";
+            // Lost Item Image
+            const lostImage = document.getElementById("match-lost-image");
+
+            if (lost.image) {
+                lostImage.src = "https://lost-and-found-m4s7.onrender.com/uploads/" + lost.image;
+                lostImage.style.display = "inline-block";
+            } else {
+                lostImage.style.display = "none";
+            }
+
+
+            // Lost Reporter
+            document.getElementById("match-lost-reporter-name").textContent =
+                lostReporter.fullname || "";
+
+            document.getElementById("match-lost-reporter-studentid").textContent =
+                lostReporter.studentid || "";
+
+            document.getElementById("match-lost-reporter-department").textContent =
+                lostReporter.department || "";
+
+            document.getElementById("match-lost-reporter-phone").textContent =
+                lostReporter.phone || "";
+
+            document.getElementById("match-lost-reporter-email").textContent =
+                lostReporter.email || "";
+
+
+            // Found Item
+            document.getElementById("match-found-item").textContent =
+                found.item_name || "";
+
+            document.getElementById("match-found-category").textContent =
+                found.category || "";
+
+            document.getElementById("match-found-date").textContent =
+                found.date_found || "";
+
+            document.getElementById("match-found-location").textContent =
+                found.location_found || "";
+
+            document.getElementById("match-found-description").textContent =
+                found.description || "No description available.";
+            // Found Item Image
+            const foundImage = document.getElementById("match-found-image");
+
+            if (found.image) {
+                foundImage.src = "https://lost-and-found-m4s7.onrender.com/uploads/" + found.image;
+                foundImage.style.display = "inline-block";
+            } else {
+                foundImage.style.display = "none";
+            }
+
+
+            // Found Reporter
+            document.getElementById("match-found-reporter-name").textContent =
+                foundReporter.fullname || "";
+
+            document.getElementById("match-found-reporter-studentid").textContent =
+                foundReporter.studentid || "";
+
+            document.getElementById("match-found-reporter-department").textContent =
+                foundReporter.department || "";
+
+            document.getElementById("match-found-reporter-phone").textContent =
+                foundReporter.phone || "";
+
+            document.getElementById("match-found-reporter-email").textContent =
+                foundReporter.email || "";
+
+
+            // Open modal
+            const modalElement =
+                document.getElementById("matchInformationModal");
+
+            const modal =
+                new bootstrap.Modal(modalElement);
+
+            modal.show();
+
+        } catch (error) {
+
+            console.error("Error fetching match details:", error);
+
+            alert("Unable to load match information.");
+
+        }
+
+    }
+
+    if (e.target.id === "confirmMatchBtn") {
+
+        const lostId = e.target.dataset.lostId;
+        const foundId = e.target.dataset.foundId;
+
+        try {
+
+            const response = await fetch(
+                "https://lost-and-found-m4s7.onrender.com/admin/confirm-match",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        lost_id: lostId,
+                        found_id: foundId
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.message || "Unable to confirm match.");
+                return;
+            }
+
+            alert(data.message);
+
+            loadMatches();
+
+            loadMatchHistory();
+
+        } catch (error) {
+
+            console.error("Error confirming match:", error);
+
+            alert("Unable to confirm match.");
+
+        }
+
+    }
+
+});
+async function loadMatchHistory() {
+
+    try {
+
+        const response = await fetch(
+            "https://lost-and-found-m4s7.onrender.com/admin/match-history"
+        );
+
+        const history = await response.json();
+
+        const tbody = document.getElementById(
+            "match-history-table-body"
+        );
+
+        tbody.innerHTML = "";
+
+        if (history.length === 0) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center">
+                        No matching history found.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        history.forEach(match => {
+
+            const row = document.createElement("tr");
+
+            const date = match.created_at
+                ? new Date(match.created_at).toLocaleString()
+                : "";
+
+            row.innerHTML = `
+                <td>${match.lost_item}</td>
+
+                <td>${match.found_item}</td>
+
+                <td>${match.status}</td>
+
+                <td>${date}</td>
+
+                <td>
+    <button
+        class="btn btn-sm btn-success item-returned-btn"
+        data-history-id="${match.history_id}"
+        data-lost-id="${match.lost_id}"
+        data-found-id="${match.found_id}">
+        Item Returned
+    </button>
+
+    <button
+        class="btn btn-sm btn-danger not-match-btn"
+        data-history-id="${match.history_id}"
+        data-lost-id="${match.lost_id}"
+        data-found-id="${match.found_id}">
+        Not Match
+    </button>
+</td>
+            `;
+
+            tbody.appendChild(row);
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error loading match history:",
+            error
+        );
+
+    }
+
+}
+document.addEventListener("click", async function (e) {
+
+    if (!e.target.classList.contains("not-match-btn")) {
+        return;
+    }
+
+    const historyId = e.target.dataset.historyId;
+    const lostId = e.target.dataset.lostId;
+    const foundId = e.target.dataset.foundId;
+
+    const response = await fetch(
+        "https://lost-and-found-m4s7.onrender.com/admin/not-match",
+        {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                history_id: historyId,
+                lost_id: lostId,
+                found_id: foundId
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    alert(data.message);
+
+    if (response.ok) {
+
+        loadMatches();
+        loadMatchHistory();
+
+    }
+
+});
+document.addEventListener("click", async function (e) {
+
+    if (!e.target.classList.contains("item-returned-btn")) {
+        return;
+    }
+
+    const historyId = e.target.dataset.historyId;
+    const lostId = e.target.dataset.lostId;
+    const foundId = e.target.dataset.foundId;
+
+    const response = await fetch(
+        "https://lost-and-found-m4s7.onrender.com/admin/item-returned",
+        {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                history_id: historyId,
+                lost_id: lostId,
+                found_id: foundId
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    alert(data.message);
+
+    if (response.ok) {
+        loadMatchHistory();
+        loadTotalReturnedItems();
+        loadTotalUnclaimedItems();
+    }
+
+  
+
+});
+
+  
